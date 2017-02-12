@@ -2,9 +2,7 @@ version: '2'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile-dev
+    build: .
     image: &khronos
       khronos:dev
     env_file: &khronos_env
@@ -14,14 +12,14 @@ services:
     volumes:
       - ./app:/app
     command:
-      ["python", "app.py"]
+      ["/wait-for-it.sh", "db:5432", "-t", "90", "--", "python", "app.py"]
 
   db:
     image: postgres:9.6.1
     restart: always
     env_file: *khronos_env
-    # ports:
-    #   - "5432:5432"
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:3.2.5
@@ -29,8 +27,7 @@ services:
     ports:
       - "6379:6379"
 
- # Celery worker
-  worker:
+  celery-worker:
     image: *khronos
     command: ["celery", "worker", "--app=tasks", "--concurrency=3", "--beat", "--loglevel=INFO"]
     volumes:
