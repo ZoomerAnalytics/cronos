@@ -1,5 +1,6 @@
 """A job that sends a Celery task to a queue"""
 
+import os
 import sys
 
 from celery import Celery, Task
@@ -17,8 +18,8 @@ class CeleryJob(job.JobBase):
             'arguments': [
                 {'type': 'string', 'description': 'task name'},
                 {'type': 'list', 'description': 'arguments'},
-                {'type': 'string', 'description': 'broker'},
-                {'type': 'string', 'description': 'backend'},
+                {'type': 'string', 'description': 'broker (Defaults to CELERY_BROKER)'},
+                {'type': 'string', 'description': 'backend (Defaults to CELERY_RESULT_BACKEND)'},
             ],
             'example_arguments': '["tasks.add", [1, 2], "redis://redis:6379/0", "redis://redis:6379/0"]'
         }
@@ -29,7 +30,9 @@ class CeleryJob(job.JobBase):
     def get_succeeded_description(self):
         return "Task result: {}".format(self.celery_result)[:100]
 
-    def run(self, task_name, task_args, broker, backend, *args, **kwargs):
+    def run(self, task_name, task_args, broker="", backend="", **kwargs):
+        backend = backend or os.getenv("CELERY_RESULT_BACKEND")
+        broker = broker or os.getenv("CELERY_BROKER")
         app = Celery('tasks', backend=backend, broker=broker)
         remote_task = Task()
         remote_task.name = task_name
