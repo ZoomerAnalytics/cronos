@@ -5,6 +5,7 @@ require.config({
     'jquery': 'vendor/jquery',
     'backbone': 'vendor/backbone',
     'underscore': 'vendor/underscore',
+    'moment': 'vendor/moment',
 
     'jobs-view': 'views/jobs/jobs-view',
     'executions-view': 'views/executions/executions-view',
@@ -29,12 +30,14 @@ require(['jobs-view',
   'jobs-collection',
   'executions-collection',
   'logs-collection',
+  'moment',
   'backbone'], function(JobsView,
                         ExecutionsView,
                         LogsView,
                         JobsCollection,
                         ExecutionsCollection,
-                        LogsCollection) {
+                        LogsCollection,
+                        moment) {
   'use strict';
 
   var jobsCollection = new JobsCollection();
@@ -95,7 +98,12 @@ require(['jobs-view',
     if (executionId) {
       executionsCollection.getExecution(executionId);
     } else {
-      executionsCollection.getExecutions();
+      var range = parseInt($('#filter-time-range').val(), 10);
+      var end = moment();
+      var start = moment().subtract(range, 'second');
+
+      executionsCollection.getExecutionsByRange(start.toISOString(),
+                                                end.toISOString());
     }
   });
 
